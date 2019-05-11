@@ -43,6 +43,7 @@ const drawChart = (data) => {
   svg
     .append('g')
     .attr('id', 'y-axis')
+    .attr('transform', 'translate(100, 100)')
     .call(yAxis);
 
   // Draw bars
@@ -51,10 +52,12 @@ const drawChart = (data) => {
     .data(data.data)
     .enter()
     .append('rect')
+    .attr('data-date', (d) => d[0])
+    .attr('data-gdp', (d) => d[1])
     .attr('class', 'bar')
     .attr('fill', 'blue')
     .attr('x', (d, i) => i * (5 + 1))
-    .attr('y', (d) => chartHeight - d[1] / 10)
+    .attr('y', (d) => chartHeight - d[1] / 8)
     .attr('width', 5)
     .attr('height', (d) => d[1]);
 };
