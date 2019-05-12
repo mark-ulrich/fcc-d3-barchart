@@ -1,16 +1,17 @@
 const d3 = window.d3;
 
-const ChartTitle = 'Title';
+const ChartTitle = 'United States GDP';
 const chartWidth = 800;
-const chartHeight = 400;
+const chartHeight = 500;
+const chartPadding = 50;
+const barPadding = 0.6;
+const barWidth = 2;
 
 window.addEventListener('DOMContentLoaded', (e) => {
   getData();
 });
 
 const drawChart = (data) => {
-  logData(data);
-
   // Title
   d3.select('#chart-container')
     .append('h1')
@@ -23,43 +24,82 @@ const drawChart = (data) => {
     .append('svg')
     .attr('width', chartWidth)
     .attr('height', chartHeight)
+    .attr('class', 'chart')
     .style('box-shadow', '1px 1px 1px 1px #222222');
-  // .style('border', '1px red solid');
 
   // Axes
-  const xScale = d3.scaleLinear();
-  // .range([d3.min((d) => d[0]), d3.max((d) => d[1])]);
+  const quarters = data.map((data) => {
+    const year = parseInt(data[0].split('-')[0]);
+    const month = parseInt(data[0].split('-')[1]);
+    switch (month) {
+      case 4:
+        return year + 0.25;
+        break;
+      case 7:
+        return year + 0.5;
+        break;
+      case 10:
+        return year + 0.75;
+        break;
+      default:
+        return year;
+    }
+  });
+  const gdp = data.map((data) => data[1]);
+
+  const xDomain = [d3.min(quarters), d3.max(quarters)];
+  const xRange = [0, `${chartWidth - chartPadding * 2}`];
+
+  const yDomain = [d3.max(gdp), 0];
+  const yRange = [0, `${chartHeight - chartPadding * 2}`];
+
+  const xScale = d3
+    .scaleLinear()
+    .domain(xDomain)
+    .range(xRange);
+
   const yScale = d3
     .scaleLinear()
-    .range([d3.min((d) => d[1]), d3.max((d) => d[1])]);
-  const xAxis = d3.axisBottom(xScale);
+    .domain(yDomain)
+    .range(yRange);
+
+  const xAxis = d3.axisBottom(xScale).ticks(10, 'd');
   const yAxis = d3.axisLeft(yScale);
 
   svg
     .append('g')
     .attr('id', 'x-axis')
+    .attr(
+      'transform',
+      `translate(${chartPadding}, ${chartHeight - chartPadding})`
+    )
     .call(xAxis);
 
   svg
     .append('g')
     .attr('id', 'y-axis')
-    .attr('transform', 'translate(100, 100)')
+    .attr('transform', `translate(${chartPadding}, ${chartPadding})`)
     .call(yAxis);
+
+  quarters.forEach((d) => console.log(typeof d));
 
   // Draw bars
   svg
     .selectAll('rect')
-    .data(data.data)
+    .data(data)
     .enter()
     .append('rect')
-    .attr('data-date', (d) => d[0])
-    .attr('data-gdp', (d) => d[1])
+    .attr('data-date', (data) => data[0])
+    .attr('data-gdp', (data) => data[1])
     .attr('class', 'bar')
     .attr('fill', 'blue')
-    .attr('x', (d, i) => i * (5 + 1))
-    .attr('y', (d) => chartHeight - d[1] / 8)
-    .attr('width', 5)
-    .attr('height', (d) => d[1]);
+    .attr('x', (data, i) => parseFloat(xScale(quarters[i])) + chartPadding)
+    .attr('y', (data, i) => yScale(gdp[i]) + chartPadding)
+    .attr('width', barWidth)
+    .attr(
+      'height',
+      (data, i) => chartHeight - yScale(gdp[i]) - chartPadding * 2
+    );
 };
 
 const getData = () => {
@@ -70,12 +110,14 @@ const getData = () => {
   xhr.open('GET', url, true);
 
   xhr.onload = () => {
-    drawChart(JSON.parse(xhr.responseText));
+    // logData(JSON.parse(xhr.responseText));
+    // logData(JSON.parse(xhr.responseText).data);
+    drawChart(JSON.parse(xhr.responseText).data);
   };
 
   xhr.send();
 };
 
 const logData = (data) => {
-  // console.log(data);
+  console.log(data);
 };
