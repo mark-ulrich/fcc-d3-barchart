@@ -1,0 +1,17 @@
+.bar {
+  fill: #1a33cc;
+}
+
+.bar:hover {
+  fill: #fff;
+}
+
+#tooltip {
+  position: absolute;
+  visibility: hidden;
+  text-align: center;
+  padding: 1rem;
+  line-height: 1.8rem;
+  background: #ccc;
+  color: #333;
+}

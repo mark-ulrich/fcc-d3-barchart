@@ -1,17 +1,16 @@
 const d3 = window.d3;
 
-const ChartTitle = 'United States GDP';
-const chartWidth = 800;
-const chartHeight = 500;
-const chartPadding = 50;
-const barPadding = 0.6;
-const barWidth = 2;
-
 window.addEventListener('DOMContentLoaded', (e) => {
   getData();
 });
 
 const drawChart = (data) => {
+  const ChartTitle = 'United States GDP';
+  const chartWidth = 800;
+  const chartHeight = 500;
+  const chartPadding = 50;
+  const barWidth = 2.2;
+
   // Title
   d3.select('#chart-container')
     .append('h1')
@@ -63,7 +62,7 @@ const drawChart = (data) => {
     .domain(yDomain)
     .range(yRange);
 
-  const xAxis = d3.axisBottom(xScale).ticks(10, 'd');
+  const xAxis = d3.axisBottom(xScale).ticks(10, 'f');
   const yAxis = d3.axisLeft(yScale);
 
   svg
@@ -81,8 +80,6 @@ const drawChart = (data) => {
     .attr('transform', `translate(${chartPadding}, ${chartPadding})`)
     .call(yAxis);
 
-  quarters.forEach((d) => console.log(typeof d));
-
   // Draw bars
   svg
     .selectAll('rect')
@@ -92,7 +89,7 @@ const drawChart = (data) => {
     .attr('data-date', (data) => data[0])
     .attr('data-gdp', (data) => data[1])
     .attr('class', 'bar')
-    .attr('fill', 'blue')
+    // .attr('fill', barColor)
     .attr('x', (data, i) => parseFloat(xScale(quarters[i])) + chartPadding)
     .attr('y', (data, i) => yScale(gdp[i]) + chartPadding)
     .attr('width', barWidth)
@@ -100,6 +97,54 @@ const drawChart = (data) => {
       'height',
       (data, i) => chartHeight - yScale(gdp[i]) - chartPadding * 2
     );
+
+  const bars = document.querySelectorAll('.bar');
+  bars.forEach((bar) => {
+    bar.addEventListener('mouseenter', (e) => {
+      const date = e.target.getAttribute('data-date');
+      const gdp = e.target.getAttribute('data-gdp');
+      drawTooltip(e.clientX, date, gdp);
+    });
+    bar.addEventListener('mouseout', (e) => {
+      const tooltip = document.getElementById('tooltip');
+      if (tooltip) tooltip.style.visibility = 'hidden';
+    });
+  });
+};
+
+const drawTooltip = (mouseX, date, gdp) => {
+  const offsetX = 50;
+  const positionY = 300;
+
+  const tooltip = document.getElementById('tooltip');
+
+  tooltip.style.top = positionY;
+  // tooltip.style.left = mouseX + offsetX;
+  tooltip.style.left = 100;
+  tooltip.style.visibility = 'visible';
+  tooltip.setAttribute('data-date', date);
+
+  const year = parseInt(date.split('-')[0]);
+  const quarter = (() => {
+    switch (date.split('-')[1]) {
+      case '01':
+        return '1';
+        break;
+      case '04':
+        return '2';
+        break;
+      case '07':
+        return '3';
+        break;
+      case '10':
+        return '4';
+        break;
+      default:
+        console.error('Bad Value');
+    }
+  })();
+  const text = `${year} Q${quarter}<br>$${gdp} Billion`;
+  tooltip.innerHTML = text;
 };
 
 const getData = () => {
